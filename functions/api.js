@@ -1,22 +1,22 @@
 const express = require("express");
 const cors = require("cors");
-const { db } = require("./functions/firebase");
+const { db } = require("./firebase");
 const multer = require("multer");
 const serverless = require("serverless-http");
-const u = require("./functions/utils");
+const u = require("./utils");
 
 const SUCCESS = 200,
   BAD_REQUEST = 400,
   SERVER_ERROR = 500;
 
 let app = express();
-const router = express.Router();
 let upload = multer();
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded());
 
 
-
-
-router.get("/api/categories", async (req, res) => {
+app.get("/api/categories", async (req, res) => {
   try {
     const categories = await db.listCollections() 
     const listOfItems = await Promise.all(categories.map(async ( category ) => {
@@ -37,7 +37,7 @@ router.get("/api/categories", async (req, res) => {
   }
 });
 
-router.post(
+app.post(
   "/api/create/:collection/:documentName",
   upload.single("file"),
   async (req, res) => {
@@ -84,7 +84,7 @@ router.post(
     }
   }
 );
-router.delete("/api/delete/:collection/:documentName/:id", async (req, res) => {
+app.delete("/api/delete/:collection/:documentName/:id", async (req, res) => {
   const { id, collection, documentName } = req.params;
   console.log(collection, documentName)
   if (!collection || collection.trim().length === 0) {
@@ -109,7 +109,7 @@ router.delete("/api/delete/:collection/:documentName/:id", async (req, res) => {
       .send({ message: "Error while deleting item! " + e.message });
   }
 });
-router.put(
+app.put(
   "/api/update/:collection/:documentName/:id",
   upload.single("image"),
   async (req, res) => {
@@ -145,10 +145,7 @@ router.put(
     }
   }
 );
-
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded());
-app.use("/.netlify/functions/api", router);
-
+app.listen(8000, () => {
+  console.log("Server is alive");
+});
 module.exports.handler = serverless(app);
