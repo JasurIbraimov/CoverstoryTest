@@ -1,22 +1,22 @@
 const express = require("express");
 const cors = require("cors");
-const { db } = require("./firebase");
+const { db } = require("./functions/firebase");
 const multer = require("multer");
 const serverless = require("serverless-http");
-const u = require("./utils");
+const u = require("./functions/utils");
 
 const SUCCESS = 200,
   BAD_REQUEST = 400,
   SERVER_ERROR = 500;
 
 let app = express();
+const router = express.Router();
 let upload = multer();
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded());
 
 
-app.get("/api/categories", async (req, res) => {
+
+
+router.get("/categories", async (req, res) => {
   try {
     const categories = await db.listCollections() 
     const listOfItems = await Promise.all(categories.map(async ( category ) => {
@@ -37,8 +37,8 @@ app.get("/api/categories", async (req, res) => {
   }
 });
 
-app.post(
-  "/api/create/:collection/:documentName",
+router.post(
+  "/create/:collection/:documentName",
   upload.single("file"),
   async (req, res) => {
     const { title, price } = req.body;
@@ -84,7 +84,7 @@ app.post(
     }
   }
 );
-app.delete("/api/delete/:collection/:documentName/:id", async (req, res) => {
+router.delete("/delete/:collection/:documentName/:id", async (req, res) => {
   const { id, collection, documentName } = req.params;
   console.log(collection, documentName)
   if (!collection || collection.trim().length === 0) {
@@ -109,8 +109,8 @@ app.delete("/api/delete/:collection/:documentName/:id", async (req, res) => {
       .send({ message: "Error while deleting item! " + e.message });
   }
 });
-app.put(
-  "/api/update/:collection/:documentName/:id",
+router.put(
+  "/update/:collection/:documentName/:id",
   upload.single("image"),
   async (req, res) => {
     const { title, price } = req.body;
@@ -145,7 +145,10 @@ app.put(
     }
   }
 );
-app.listen(8000, () => {
-  console.log("Server is alive");
-});
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded());
+app.use("/.netlify/functions/api", router);
+
 module.exports.handler = serverless(app);
