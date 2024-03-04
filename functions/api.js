@@ -1,9 +1,9 @@
 const express = require("express");
 const cors = require("cors");
-const { db } = require("./functions/firebase");
+const { db } = require("./firebase");
 const multer = require("multer");
 const serverless = require("serverless-http");
-const u = require("./functions/utils");
+const u = require("./utils");
 
 const SUCCESS = 200,
   BAD_REQUEST = 400,
